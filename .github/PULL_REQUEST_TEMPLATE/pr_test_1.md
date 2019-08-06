@@ -1,6 +1,6 @@
 ---
 name: "PR template 1"
-about: PR template 2
+about: PR template 1
 
 ---
 
