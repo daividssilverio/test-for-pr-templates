@@ -1,8 +1,86 @@
-<p>
-  Hello
-</p>
-<div id="such-test"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        .card {
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="text-entries"></div>
+    </div>
+    <script type="text/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        const halfADayInMilliseconds = 43200000;
+        function loadResources() {
+            let localStorage = window.localStorage;
+            let lastRequestAt = new Date(localStorage.getItem("lastRequestAt"));
+            let timeFromLastRequest = new Date().getTime() - lastRequestAt.getTime();
+            if (timeFromLastRequest > halfADayInMilliseconds) {
 
-<script>
-  document.getElementById('#such-test').innerHTML = "Kabum!"
-</script>
+            }
+            let request = new XMLHttpRequest();
+            request.open("GET", "https://raw.githubusercontent.com/toggl/mobileapp/develop/Toggl.Shared/Resources.resx", true);
+            request.onreadystatechange = function() {
+                if (request.readyState === 4) {
+                    if (request.status === 200 || request.status === 0) {
+                        processXML(request.responseText);
+                    }
+                }
+            };
+            request.send();
+        }
+
+        function processXML(rawTextResponse) {
+            let textEntries = document.getElementById('text-entries');
+            let domParser = new DOMParser();
+            let resourcesXml = domParser.parseFromString(rawTextResponse, "application/xml");
+            let dataQuery = resourcesXml.evaluate('/root/data', resourcesXml);
+            let dataEntry = dataQuery.iterateNext();
+            while (dataEntry) {
+                let textEntryDiv = document.createElement("div");
+                textEntryDiv.className = "card";
+
+                let textEntryTitle = document.createElement("div");
+                textEntryTitle.className = "card-header";
+                textEntryTitle.appendChild(document.createTextNode(dataEntry.getAttribute("name")));
+
+                let textEntryBody = document.createElement("div");
+                textEntryBody.className = "card-body";
+
+                let textEntryText = document.createElement("p");
+                textEntryText.className = "card-text";
+                textEntryText.appendChild(document.createTextNode(dataEntry.getElementsByTagName("value")[0].textContent));
+
+                let comment = document.createElement("p");
+                comment.className = "card-text";
+                let commentText = document.createElement("small");
+                commentText.className = "text-muted";
+                commentText.appendChild(document.createTextNode("Context"));
+                comment.appendChild(commentText);
+
+                let translation = document.createElement("textarea");
+                translation.className = "form-control";
+                translation.setAttribute("placeholder", "Add your translation here");
+
+                textEntryDiv.appendChild(textEntryTitle);
+                textEntryDiv.appendChild(textEntryBody);
+
+                textEntryBody.appendChild(textEntryText);
+                textEntryBody.appendChild(comment);
+                textEntryBody.appendChild(translation);
+
+                textEntries.appendChild(textEntryDiv);
+                dataEntry = dataQuery.iterateNext();
+            }
+        }
+
+        loadResources();
+    </script>
+</body>
+</html>
