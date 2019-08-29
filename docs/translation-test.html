@@ -47,6 +47,7 @@
             padding: 5px 20px;
             border-radius: 10px;
             font-weight: 700;
+            margin-bottom: 10px;
             line-height: 1.5;
             text-align: center;
             color: #fff;
@@ -64,7 +65,7 @@
             <div class="banner-sub-heading">
                 Thanks for helping 🙌
             </div>
-            <button type="button" class="btn btn-secondary btn-banner" onclick="goToFirstEntryNotTranslated()">Start translating</button>
+            <button type="button" class="btn btn-secondary btn-banner" onclick="goToFirstEntryNotTranslated()">Start/continue translating</button>
             <button type="button" class="btn btn-secondary btn-banner" onclick="downloadCSV()">Download CSV instead
             </button>
         </div>
@@ -154,7 +155,6 @@
                 localStorage.setItem(entry.name, translation.value);
             }
         });
-        goToFirstEntryNotTranslated();
     }
 
     function goToFirstEntryNotTranslated() {
