@@ -3,84 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
         .card {
             margin-bottom: 12px;
         }
+
+        div.translation-card:not(:focus-within) {
+            opacity: 0.4;
+        }
+
+        div.translation-card:active {
+            opacity: 1;
+        }
+
+        .banner {
+            text-align: center;
+            color: #c2c2c2;
+        }
+
+        .banner-text {
+            padding: 100px 0 75px 0;
+        }
+
+        .banner-heading {
+            font-size: 75px;
+            font-weight: 700;
+            line-height: 100px;
+            margin-bottom: 30px;
+            color: #c2c2c2;
+        }
+
+        .banner-sub-heading {
+            font-size: 30px;
+            font-weight: 300;
+            line-height: 30px;
+            margin-bottom: 50px;
+            color: #c2c2c2;
+        }
+
+        .btn-banner {
+            padding: 5px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            line-height: 1.5;
+            text-align: center;
+            color: #fff;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
+<div class="banner">
     <div class="container">
-        <div id="text-entries"></div>
+        <div class="banner-text">
+            <div class="banner-heading">
+                Toggl app's translations!
+            </div>
+            <div class="banner-sub-heading">
+                Thanks for helping 🙌
+            </div>
+            <button type="button" class="btn btn-secondary btn-banner" onclick="goToFirstEntryNotTranslated()">Start translating</button>
+            <button type="button" class="btn btn-secondary btn-banner" onclick="downloadCSV()">Download CSV instead
+            </button>
+        </div>
     </div>
-    <script type="text/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <script type="text/javascript">
-        const halfADayInMilliseconds = 43200000;
-        function loadResources() {
-            let localStorage = window.localStorage;
-            let lastRequestAt = new Date(localStorage.getItem("lastRequestAt"));
-            let timeFromLastRequest = new Date().getTime() - lastRequestAt.getTime();
-            if (timeFromLastRequest > halfADayInMilliseconds) {
+</div>
+<div class="container">
+    <div id="text-entries"></div>
+</div>
+<script type="text/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+<script type="text/javascript">
+    const halfADayInMilliseconds = 60 * 1000;
 
-            }
+    function loadResources() {
+        let localStorage = window.localStorage;
+        let lastRequestAt = new Date(localStorage.getItem("lastRequestAt"));
+        let timeFromLastRequest = new Date().getTime() - lastRequestAt.getTime();
+
+        if (timeFromLastRequest > halfADayInMilliseconds) {
+            localStorage.setItem("lastRequestAt", new Date().toString());
             let request = new XMLHttpRequest();
             request.open("GET", "https://raw.githubusercontent.com/toggl/mobileapp/develop/Toggl.Shared/Resources.resx", true);
-            request.onreadystatechange = function() {
+            request.onreadystatechange = function () {
                 if (request.readyState === 4) {
                     if (request.status === 200 || request.status === 0) {
                         processXML(request.responseText);
+                        loadUIFromStorage();
                     }
                 }
             };
             request.send();
+        } else {
+            loadUIFromStorage();
         }
+    }
 
-        function processXML(rawTextResponse) {
-            let textEntries = document.getElementById('text-entries');
-            let domParser = new DOMParser();
-            let resourcesXml = domParser.parseFromString(rawTextResponse, "application/xml");
-            let dataQuery = resourcesXml.evaluate('/root/data', resourcesXml);
-            let dataEntry = dataQuery.iterateNext();
-            while (dataEntry) {
-                let textEntryDiv = document.createElement("div");
-                textEntryDiv.className = "card";
+    function loadUIFromStorage() {
+        let localStorage = window.localStorage;
+        let entries = JSON.parse(localStorage.getItem("entries"));
+        let textEntriesDiv = document.getElementById('text-entries');
 
-                let textEntryTitle = document.createElement("div");
-                textEntryTitle.className = "card-header";
-                textEntryTitle.appendChild(document.createTextNode(dataEntry.getAttribute("name")));
+        entries.forEach(function (entry) {
+            let textEntryDiv = document.createElement("div");
+            textEntryDiv.className = "card translation-card";
 
-                let textEntryBody = document.createElement("div");
-                textEntryBody.className = "card-body";
+            let textEntryTitle = document.createElement("div");
+            textEntryTitle.className = "card-header";
+            textEntryTitle.appendChild(document.createTextNode(entry.name));
 
-                let textEntryText = document.createElement("p");
-                textEntryText.className = "card-text";
-                textEntryText.appendChild(document.createTextNode(dataEntry.getElementsByTagName("value")[0].textContent));
+            let textEntryBody = document.createElement("div");
+            textEntryBody.className = "card-body";
 
-                let comment = document.createElement("p");
-                comment.className = "card-text";
-                let commentText = document.createElement("small");
-                commentText.className = "text-muted";
-                commentText.appendChild(document.createTextNode("Context"));
-                comment.appendChild(commentText);
+            let textEntryText = document.createElement("p");
+            textEntryText.className = "card-text";
+            textEntryText.appendChild(document.createTextNode(entry.text));
 
-                let translation = document.createElement("textarea");
-                translation.className = "form-control";
-                translation.setAttribute("placeholder", "Add your translation here");
+            let comment = document.createElement("p");
+            comment.className = "card-text";
+            let commentText = document.createElement("small");
+            commentText.className = "text-muted";
+            commentText.appendChild(document.createTextNode(entry.comment));
+            comment.appendChild(commentText);
 
-                textEntryDiv.appendChild(textEntryTitle);
-                textEntryDiv.appendChild(textEntryBody);
+            let translation = document.createElement("textarea");
+            translation.className = "form-control";
+            translation.setAttribute("placeholder", "Add your translation here");
 
-                textEntryBody.appendChild(textEntryText);
-                textEntryBody.appendChild(comment);
-                textEntryBody.appendChild(translation);
+            textEntryDiv.appendChild(textEntryTitle);
+            textEntryDiv.appendChild(textEntryBody);
 
-                textEntries.appendChild(textEntryDiv);
-                dataEntry = dataQuery.iterateNext();
+            textEntryBody.appendChild(textEntryText);
+            textEntryBody.appendChild(comment);
+            textEntryBody.appendChild(translation);
+
+            textEntriesDiv.appendChild(textEntryDiv);
+
+            translation.value = localStorage.getItem(entry.name);
+
+            textEntryDiv.onclick = function () {
+                if (!translation.hasAttribute("focus")) {
+                    translation.focus();
+                }
+            };
+
+            translation.oninput = function () {
+                localStorage.setItem(entry.name, translation.value);
+            }
+        });
+        goToFirstEntryNotTranslated();
+    }
+
+    function goToFirstEntryNotTranslated() {
+        let textAreas = document.querySelectorAll('.translation-card textarea');
+        for (let textArea = 0; textArea < textAreas.length; textArea++) {
+            if (textAreas[textArea].value === undefined || textAreas[textArea].value === '') {
+                window.scrollTo(window.screenX, textAreas[textArea].parentElement.parentElement.getBoundingClientRect().y);
+                textAreas[textArea].focus();
+                break;
             }
         }
+    }
 
-        loadResources();
-    </script>
+    function processXML(rawTextResponse) {
+        let localStorage = window.localStorage;
+        let domParser = new DOMParser();
+        let resourcesXml = domParser.parseFromString(rawTextResponse, "application/xml");
+        let dataQuery = resourcesXml.evaluate('/root/data', resourcesXml);
+        let dataEntry = dataQuery.iterateNext();
+        let entryNames = [];
+        while (dataEntry) {
+            let jsonEntry = {
+                name: dataEntry.getAttribute("name"),
+                text: dataEntry.getElementsByTagName("value")[0].textContent,
+                comment: dataEntry.getElementsByTagName("comment")[0] && dataEntry.getElementsByTagName("comment")[0].textContent,
+            };
+            if (jsonEntry.name !== "CountriesJson" && jsonEntry.name !== "TimezonesJson") {
+                entryNames.push(jsonEntry);
+            }
+            dataEntry = dataQuery.iterateNext();
+        }
+        localStorage.setItem("entries", JSON.stringify(entryNames));
+    }
+
+    function downloadCSV() {
+        let entries = JSON.parse(localStorage.getItem("entries"));
+        let csvStr = 'Entry Name,Text,Comment,Translation\r\n';
+
+        entries.forEach(function (entry) {
+            csvStr += entry.name + ",";
+            csvStr += "\"" + entry.text.replace(/"/g, '""').replace(/\n/, "\\n") + "\"" + ",";
+            csvStr += "\"" + (entry.comment === undefined ? '' : entry.comment) + "\"" + ",";
+            let translation = localStorage.getItem(entry.name);
+            csvStr += (translation === null ? '' : translation.replace(/"/g, '""').replace(/\n/, "\\n")) + "\r\n";
+        });
+
+        let blob = new Blob([csvStr], {type: 'text/csv;charset=utf-8;'});
+        let link = document.createElement("a");
+        if (link.download !== undefined) {
+           let url = URL.createObjectURL(blob);
+           link.setAttribute("href", url);
+           link.setAttribute("download", "resources.resx.csv");
+           link.style.visibility = 'hidden';
+           document.body.appendChild(link);
+           link.click();
+           document.body.removeChild(link);
+        }
+    }
+
+    loadResources();
+</script>
 </body>
 </html>
